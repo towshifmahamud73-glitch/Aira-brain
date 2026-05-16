@@ -1,15 +1,15 @@
 {
   "name": "AIRA Neural Core",
   "short_name": "AIRA SYS",
-  "start_url": "./index.html",
-  "scope": "./",
+  "start_url": "/aira-brain/index.html",
+  "scope": "/aira-brain/",
   "display": "standalone",
   "orientation": "landscape",
   "background_color": "#020810",
   "theme_color": "#020810",
   "icons": [
     {
-      "src": "./icon.png",
+      "src": "/aira-brain/icon.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
