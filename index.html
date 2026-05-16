@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AIRA SYS">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#020810">
+<link rel="manifest" href="manifest-tablet.json">
+<title>AIRA · NEURAL CORE</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box;outline:none;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#020810;--panel:#030b12;
+  --g:rgba(60,190,170,1);--gd:rgba(60,190,170,0.45);--gf:rgba(60,190,170,0.1);--gb:rgba(60,190,170,0.05);
+  --border:rgba(60,190,170,0.1);--text:rgba(60,190,170,0.75);--muted:rgba(60,190,170,0.32);--dim:rgba(60,190,170,0.13);
+  --red:rgba(220,70,70,0.9);--amber:rgba(210,160,50,0.9);--blue:rgba(80,170,220,0.85);--purple:rgba(160,110,220,0.8);
+}
+html,body{width:100vw;height:100vh;background:var(--bg);overflow:hidden;font-family:'Share Tech Mono',monospace;color:var(--text);user-select:none;-webkit-user-select:none;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.04) 3px,rgba(0,0,0,0.04) 4px);pointer-events:none;z-index:8000;}
+
+/* ══ ROOT LAYOUT ══
+   Row 0: topbar (44px)
+   Row 1: main content (1fr)
+   Row 2: bottom bar (36px)
+   Col 0: left panel (220px) — spans rows 1
+   Col 1-2: center two panels side by side
+   Col 3: right panel (190px) — spans rows 1
+*/
+.root{
+  width:100vw;height:100vh;
+  display:grid;
+  grid-template-columns:220px 1fr 1fr 190px;
+  grid-template-rows:44px 1fr 36px;
+  gap:1px;
+  background:var(--border);
+}
+
+/* every grid child */
+.g{background:var(--panel);overflow:hidden;position:relative;min-width:0;min-height:0;}
+
+/* topbar and bottombar span all cols */
+.topbar{grid-column:1/-1;grid-row:1;background:var(--bg);display:flex;align-items:center;justify-content:space-between;padding:0 18px;}
+.btmbar{grid-column:1/-1;grid-row:3;background:var(--bg);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 18px;}
+
+/* left col: full height of row 1, split internally into 3 panels */
+.left{grid-column:1;grid-row:2;display:flex;flex-direction:column;}
+
+/* center panels: each takes one cell */
+.center-top{grid-column:2;grid-row:2;}
+.center-bot{grid-column:3;grid-row:2;}
+
+/* right col: full height of row 1, split internally into 3 panels */
+.right{grid-column:4;grid-row:2;display:flex;flex-direction:column;}
+
+/* ── SHARED PANEL PARTS ── */
+.ph{padding:7px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.ph-t{font-size:8px;letter-spacing:4px;color:var(--muted);text-transform:uppercase;display:flex;align-items:center;gap:6px;}
+.ph-t::before{content:'';width:3px;height:3px;border-radius:50%;background:var(--g);display:inline-block;animation:bdot 2s ease-in-out infinite;}
+@keyframes bdot{0%,100%{opacity:1}50%{opacity:.15}}
+.ph-x{font-size:8px;letter-spacing:2px;color:var(--dim);}
+
+/* ── TOPBAR ── */
+.logo{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;letter-spacing:8px;color:var(--g);text-shadow:0 0 20px rgba(60,190,170,.5);}
+.tb-mid{display:flex;gap:18px;align-items:center;}
+.tb-s{font-size:9px;letter-spacing:2px;color:var(--muted);display:flex;align-items:center;gap:5px;}
+.sd{width:5px;height:5px;border-radius:50%;}
+.son{background:var(--g);box-shadow:0 0 6px var(--g);animation:bdot 3s ease-in-out infinite;}
+.swarn{background:var(--amber);box-shadow:0 0 6px var(--amber);}
+.serr{background:var(--red);box-shadow:0 0 6px var(--red);animation:bdot .8s ease-in-out infinite;}
+.tb-clk{font-size:15px;letter-spacing:5px;color:var(--g);text-shadow:0 0 14px rgba(60,190,170,.4);}
+
+/* ── BOTTOM BAR ── */
+.bb-items{display:flex;gap:16px;}
+.bb-i{font-size:8px;letter-spacing:2px;color:var(--dim);}
+.bb-i span{color:var(--gd);}
+.bb-tag{font-size:8px;letter-spacing:3px;color:rgba(60,190,170,.1);}
+
+/* ── NEURAL WAVE (left top) ── */
+.neu-wrap{flex:1.1;display:flex;flex-direction:column;min-height:0;}
+.neu-c{flex:1;position:relative;overflow:hidden;min-height:0;}
+#neuC{position:absolute;inset:0;width:100%;height:100%;display:block;}
+
+/* ── THOUGHT STREAM (left mid) ── */
+.thought-wrap{flex:1;display:flex;flex-direction:column;min-height:0;border-top:1px solid var(--border);}
+.thought-body{flex:1;position:relative;overflow:hidden;min-height:0;}
+.thought-scroll{position:absolute;inset:8px 12px;display:flex;flex-direction:column;justify-content:flex-end;}
+.tl{font-size:9px;line-height:1.6;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;animation:tIn .25s ease forwards;opacity:0;}
+@keyframes tIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+.tc{color:var(--g);}.ti{color:rgba(60,190,170,.4);}.tw{color:rgba(210,160,50,.7);}
+.td{color:rgba(80,170,220,.6);}.tok{color:rgba(60,190,170,.85);}.tdim{color:rgba(60,190,170,.14);}
+.tp{color:rgba(160,110,220,.65);}
+.tcur{display:inline-block;width:6px;height:10px;background:var(--g);margin-left:2px;animation:cur 1s step-end infinite;vertical-align:middle;}
+@keyframes cur{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ── ENV / WEATHER (left bottom) ── */
+.env-wrap{flex:0 0 auto;display:flex;flex-direction:column;border-top:1px solid var(--border);}
+.env-body{padding:10px 12px;display:flex;flex-direction:column;gap:8px;}
+.env-row{display:flex;justify-content:space-between;align-items:center;}
+.env-key{font-size:8px;letter-spacing:3px;color:var(--muted);}
+.env-val{font-size:13px;letter-spacing:3px;color:var(--g);text-shadow:0 0 10px rgba(60,190,170,.3);}
+.env-big{font-size:32px;letter-spacing:4px;color:var(--g);text-shadow:0 0 20px rgba(60,190,170,.35);font-family:'Share Tech Mono',monospace;}
+.env-unit{font-size:9px;letter-spacing:2px;color:var(--muted);}
+.env-bar{height:3px;background:var(--dim);border-radius:2px;overflow:hidden;margin-top:2px;}
+.env-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,rgba(60,190,170,.4),var(--g));transition:width 2s ease;}
+.env-mini{display:flex;gap:10px;}
+.env-mini-item{display:flex;flex-direction:column;gap:2px;}
+
+/* ── BRAIN TOPOLOGY (center top) ── */
+.brain-wrap{display:flex;flex-direction:column;height:100%;}
+.brain-c{flex:1;position:relative;overflow:hidden;min-height:0;}
+#brainC{position:absolute;inset:0;width:100%;height:100%;display:block;}
+
+/* ── PROCESS BARS (center bottom) ── */
+.proc-wrap{display:flex;flex-direction:column;height:100%;}
+.proc-body{flex:1;padding:10px 14px;display:flex;flex-direction:column;gap:6px;overflow:hidden;min-height:0;}
+.proc-row{display:flex;flex-direction:column;gap:3px;flex:1;justify-content:center;}
+.proc-lbl{display:flex;justify-content:space-between;font-size:9px;letter-spacing:2px;color:var(--muted);}
+.proc-bar{height:4px;background:var(--dim);border-radius:2px;overflow:hidden;position:relative;}
+.proc-fill{height:100%;border-radius:2px;transition:width 1.4s cubic-bezier(.4,0,.2,1);}
+.pf-g{background:linear-gradient(90deg,rgba(60,190,170,.3),var(--g));box-shadow:0 0 5px rgba(60,190,170,.3);}
+.pf-b{background:linear-gradient(90deg,rgba(80,170,220,.3),rgba(80,170,220,1));box-shadow:0 0 5px rgba(80,170,220,.3);}
+.pf-p{background:linear-gradient(90deg,rgba(160,110,220,.3),rgba(160,110,220,1));box-shadow:0 0 5px rgba(160,110,220,.3);}
+.pf-a{background:linear-gradient(90deg,rgba(210,160,50,.3),rgba(210,160,50,1));box-shadow:0 0 5px rgba(210,160,50,.3);}
+.pf-r{background:linear-gradient(90deg,rgba(220,70,70,.3),rgba(220,70,70,1));box-shadow:0 0 5px rgba(220,70,70,.3);}
+.proc-bar::after{content:'';position:absolute;top:0;bottom:0;width:30px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.05),transparent);animation:scan 3s linear infinite;}
+@keyframes scan{from{left:-30px}to{left:100%}}
+
+/* ── EMOTION RADAR (right top) ── */
+.radar-wrap{flex:1.1;display:flex;flex-direction:column;min-height:0;}
+.radar-c{flex:1;display:flex;align-items:center;justify-content:center;padding:6px;min-height:0;overflow:hidden;}
+#radC{display:block;max-width:100%;max-height:100%;}
+.emo-labels{padding:0 10px 8px;display:flex;flex-wrap:wrap;gap:3px;flex-shrink:0;}
+.emo-lbl{font-size:7px;letter-spacing:2px;color:rgba(60,190,170,.25);padding:2px 5px;border:1px solid rgba(60,190,170,.08);border-radius:2px;transition:color .5s,border-color .5s;}
+
+/* ── EVENT FEED (right mid) ── */
+.evt-wrap{flex:1;display:flex;flex-direction:column;min-height:0;border-top:1px solid var(--border);}
+.evt-body{flex:1;padding:8px 10px;overflow:hidden;display:flex;flex-direction:column;gap:5px;min-height:0;}
+.evt-item{padding:5px 8px;border-radius:4px;border:1px solid var(--border);background:var(--gb);display:flex;flex-direction:column;gap:2px;animation:evIn .4s ease forwards;opacity:0;flex-shrink:0;}
+@keyframes evIn{from{opacity:0;transform:translateX(6px)}to{opacity:1;transform:translateX(0)}}
+.evt-item.hi{border-color:rgba(60,190,170,.22);background:rgba(60,190,170,.04);}
+.evt-item.warn{border-color:rgba(210,160,50,.2);background:rgba(210,160,50,.03);}
+.ety{font-size:7px;letter-spacing:3px;color:var(--muted);}
+.emsg{font-size:9px;letter-spacing:1px;color:rgba(60,190,170,.68);}
+.ets{font-size:7px;letter-spacing:2px;color:var(--dim);}
+
+/* ── SYS STATUS (right bottom) ── */
+.sys-wrap{flex:0 0 auto;display:flex;flex-direction:column;border-top:1px solid var(--border);}
+.sys-body{padding:8px 10px;display:flex;flex-direction:column;gap:5px;}
+.sys-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid rgba(60,190,170,.04);}
+.sys-key{font-size:8px;letter-spacing:2px;color:rgba(60,190,170,.22);}
+.sys-val{font-size:8px;letter-spacing:2px;color:var(--gd);}
+.sys-val.ok{color:rgba(60,190,170,.7);}
+.sys-val.warn{color:rgba(210,160,50,.7);}
+</style>
+</head>
+<body>
+<div class="root">
+
+<!-- TOPBAR -->
+<div class="g topbar">
+  <div style="display:flex;align-items:center;gap:14px">
+    <div class="logo">AIRA</div>
+    <div style="font-size:9px;letter-spacing:3px;color:var(--muted)">NEURAL CORE · v3.1</div>
+  </div>
+  <div class="tb-mid">
+    <div class="tb-s"><div class="sd son"></div>COGNITIVE</div>
+    <div class="tb-s"><div class="sd son"></div>VOICE</div>
+    <div class="tb-s"><div class="sd son"></div>MEMORY</div>
+    <div class="tb-s"><div class="sd swarn"></div>SENSOR</div>
+    <div class="tb-s"><div class="sd son"></div>EMOTION</div>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px">
+    <div class="tb-clk" id="topClk">--:--:--</div>
+    <div style="font-size:8px;letter-spacing:3px;color:var(--muted)" id="topDt">—</div>
+  </div>
+</div>
+
+<!-- LEFT COLUMN -->
+<div class="g left">
+
+  <!-- Neural Wave -->
+  <div class="neu-wrap">
+    <div class="ph"><div class="ph-t">Neural Activity</div><div class="ph-x" id="neuHz">-- Hz</div></div>
+    <div class="neu-c"><canvas id="neuC"></canvas></div>
+  </div>
+
+  <!-- Thought Stream -->
+  <div class="thought-wrap">
+    <div class="ph"><div class="ph-t">Thought Stream</div><div class="ph-x" id="tCount">0</div></div>
+    <div class="thought-body">
+      <div class="thought-scroll" id="tScroll">
+        <div class="tl tdim">· initializing ·</div>
+        <div class="tl tc">AIRA ❯ <span class="tcur"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Environment / Weather -->
+  <div class="env-wrap">
+    <div class="ph"><div class="ph-t">Environment</div><div class="ph-x" id="envStatus">room scan active</div></div>
+    <div class="env-body">
+      <div class="env-row">
+        <div>
+          <div class="env-big" id="envTemp">28.2</div>
+          <div class="env-unit">°C · ROOM TEMP</div>
+        </div>
+        <div style="text-align:right">
+          <div class="env-val" id="envHum">64%</div>
+          <div class="env-unit">HUMIDITY</div>
+          <div style="margin-top:4px">
+            <div class="env-val" id="envLight">340 lx</div>
+            <div class="env-unit">LIGHT LEVEL</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="env-row" style="margin-bottom:3px">
+          <div class="env-key">COMFORT INDEX</div>
+          <div class="ph-x" id="envComfort">--</div>
+        </div>
+        <div class="env-bar"><div class="env-fill" id="envBar" style="width:0%"></div></div>
+      </div>
+      <div class="env-mini">
+        <div class="env-mini-item"><div class="env-key">MOTION</div><div class="env-val" id="envMotion" style="font-size:10px">NONE</div></div>
+        <div class="env-mini-item"><div class="env-key">NOISE</div><div class="env-val" id="envNoise" style="font-size:10px">LOW</div></div>
+        <div class="env-mini-item"><div class="env-key">TIME</div><div class="env-val" id="envTime" style="font-size:10px">--:--</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- CENTER TOP: brain topology -->
+<div class="g center-top">
+  <div class="brain-wrap">
+    <div class="ph"><div class="ph-t">Cognitive Topology</div><div class="ph-x" id="nodeCount">-- nodes</div></div>
+    <div class="brain-c"><canvas id="brainC"></canvas></div>
+  </div>
+</div>
+
+<!-- CENTER BOTTOM: process meters -->
+<div class="g center-bot">
+  <div class="proc-wrap">
+    <div class="ph"><div class="ph-t">Process Load</div><div class="ph-x" id="procCyc">cycle --</div></div>
+    <div class="proc-body">
+      <div class="proc-row"><div class="proc-lbl"><span>VOICE SYNTHESIS</span><span id="pv">--%</span></div><div class="proc-bar"><div class="proc-fill pf-g" id="pfv" style="width:0%"></div></div></div>
+      <div class="proc-row"><div class="proc-lbl"><span>LANGUAGE MODEL</span><span id="pl">--%</span></div><div class="proc-bar"><div class="proc-fill pf-b" id="pfl" style="width:0%"></div></div></div>
+      <div class="proc-row"><div class="proc-lbl"><span>EMOTION ENGINE</span><span id="pe">--%</span></div><div class="proc-bar"><div class="proc-fill pf-p" id="pfe" style="width:0%"></div></div></div>
+      <div class="proc-row"><div class="proc-lbl"><span>MEMORY ACCESS</span><span id="pm">--%</span></div><div class="proc-bar"><div class="proc-fill pf-a" id="pfm" style="width:0%"></div></div></div>
+      <div class="proc-row"><div class="proc-lbl"><span>SENSOR ARRAY</span><span id="ps">--%</span></div><div class="proc-bar"><div class="proc-fill pf-r" id="pfs" style="width:0%"></div></div></div>
+      <div class="proc-row"><div class="proc-lbl"><span>NEURAL NETWORK</span><span id="pn">--%</span></div><div class="proc-bar"><div class="proc-fill pf-g" id="pfn" style="width:0%"></div></div></div>
+      <div class="proc-row"><div class="proc-lbl"><span>CONTEXT WINDOW</span><span id="pc">--%</span></div><div class="proc-bar"><div class="proc-fill pf-b" id="pfc" style="width:0%"></div></div></div>
+      <div class="proc-row"><div class="proc-lbl"><span>INTENT PARSING</span><span id="pi">--%</span></div><div class="proc-bar"><div class="proc-fill pf-p" id="pfi" style="width:0%"></div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- RIGHT COLUMN -->
+<div class="g right">
+
+  <!-- Emotion Radar -->
+  <div class="radar-wrap">
+    <div class="ph"><div class="ph-t">Emotion State</div><div class="ph-x" id="dominantEmo">--</div></div>
+    <div class="radar-c"><canvas id="radC" width="170" height="170"></canvas></div>
+    <div class="emo-labels" id="emoLabels"></div>
+  </div>
+
+  <!-- Event Feed -->
+  <div class="evt-wrap">
+    <div class="ph"><div class="ph-t">Event Feed</div><div class="ph-x" id="evtCnt">0 events</div></div>
+    <div class="evt-body" id="evtBody">
+      <div class="evt-item"><div class="ety">SYSTEM</div><div class="emsg">boot complete</div><div class="ets" id="bootTs">--:--:--</div></div>
+    </div>
+  </div>
+
+  <!-- System Status -->
+  <div class="sys-wrap">
+    <div class="ph"><div class="ph-t">System</div></div>
+    <div class="sys-body">
+      <div class="sys-row"><div class="sys-key">UPTIME</div><div class="sys-val" id="uptime">00:00:00</div></div>
+      <div class="sys-row"><div class="sys-key">SESSION</div><div class="sys-val" id="sessId">--</div></div>
+      <div class="sys-row"><div class="sys-key">CONNECTION</div><div class="sys-val ok">SECURE</div></div>
+      <div class="sys-row"><div class="sys-key">LATENCY</div><div class="sys-val" id="latency">-- ms</div></div>
+      <div class="sys-row"><div class="sys-key">MEMORIES</div><div class="sys-val">2847</div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="g btmbar">
+  <div class="bb-items">
+    <div class="bb-i">SESSION <span id="bbSess">--</span></div>
+    <div class="bb-i">UPTIME <span id="bbUp">00:00:00</span></div>
+    <div class="bb-i">THOUGHTS <span id="bbT">0</span></div>
+    <div class="bb-i">EVENTS <span id="bbE">0</span></div>
+    <div class="bb-i">MOOD <span id="bbMood">--</span></div>
+    <div class="bb-i">TEMP <span id="bbTemp">--°C</span></div>
+  </div>
+  <div class="bb-tag">AIRA NEURAL CORE · ALWAYS ON · ALWAYS WITH YOU</div>
+</div>
+
+</div>
+<script>
+const boot=Date.now();
+function pad(n){return String(n).padStart(2,'0');}
+
+// ── CLOCK ──
+function tick(){
+  const n=new Date();
+  const ts=pad(n.getHours())+':'+pad(n.getMinutes())+':'+pad(n.getSeconds());
+  const D=['SUN','MON','TUE','WED','THU','FRI','SAT'],M=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  document.getElementById('topClk').textContent=ts;
+  document.getElementById('topDt').textContent=D[n.getDay()]+' '+n.getDate()+' '+M[n.getMonth()]+' '+n.getFullYear();
+  document.getElementById('envTime').textContent=pad(n.getHours())+':'+pad(n.getMinutes());
+  // uptime
+  const el=Math.floor((Date.now()-boot)/1000);
+  const ut=pad(Math.floor(el/3600))+':'+pad(Math.floor((el%3600)/60))+':'+pad(el%60);
+  document.getElementById('uptime').textContent=ut;
+  document.getElementById('bbUp').textContent=ut;
+  document.getElementById('bbSess').textContent='S'+Math.floor(boot/1000%9999).toString(16).toUpperCase();
+  document.getElementById('sessId').textContent='S'+Math.floor(boot/1000%9999).toString(16).toUpperCase();
+  document.getElementById('bootTs').textContent=pad(new Date(boot).getHours())+':'+pad(new Date(boot).getMinutes())+':'+pad(new Date(boot).getSeconds());
+}
+tick();setInterval(tick,1000);
+
+// ── NEURAL WAVE ──
+const neuCv=document.getElementById('neuC');
+const neuX=neuCv.getContext('2d');
+let neuT=0;
+const WCOLORS=['rgba(60,190,170,','rgba(80,170,220,','rgba(160,110,220,','rgba(60,190,170,','rgba(80,170,220,'];
+const WAMP=[.34,.21,.14,.27,.17],WFREQ=[1.2,1.8,2.4,.9,3.1],WSPD=[.008,.012,.018,.006,.022],WPH=[0,1.2,2.4,.6,3.0];
+let neuHz=38;
+
+function resizeNeu(){
+  const r=devicePixelRatio||1,rect=neuCv.parentElement.getBoundingClientRect();
+  neuCv.width=rect.width*r;neuCv.height=rect.height*r;
+}
+resizeNeu();
+
+function drawNeu(){
+  const W=neuCv.width,H=neuCv.height;
+  neuX.clearRect(0,0,W,H);neuT++;
+  neuHz=Math.max(18,Math.min(82,neuHz+(Math.random()-.5)*3));
+  document.getElementById('neuHz').textContent=Math.round(neuHz)+' Hz';
+  for(let w=0;w<5;w++){
+    const ph=WPH[w]+neuT*WSPD[w],amp=WAMP[w]*H*(.8+Math.sin(neuT*.01+w)*.2),freq=WFREQ[w];
+    neuX.beginPath();
+    for(let x=0;x<=W;x+=2){
+      const p=x/W,env=Math.sin(p*Math.PI);
+      const y=H/2+Math.sin(p*Math.PI*2*freq+ph)*amp*env+Math.sin(p*Math.PI*4*freq+ph*1.3)*amp*.3*env;
+      x===0?neuX.moveTo(x,y):neuX.lineTo(x,y);
+    }
+    neuX.strokeStyle=WCOLORS[w]+(.12+w*.055)+')';
+    neuX.lineWidth=(w===0?1.5:.8)*(devicePixelRatio||1);
+    neuX.shadowBlur=w===0?8:0;neuX.shadowColor='rgba(60,190,170,.3)';
+    neuX.stroke();neuX.shadowBlur=0;
+  }
+  requestAnimationFrame(drawNeu);
+}
+drawNeu();
+
+// ── BRAIN TOPOLOGY ──
+const brainCv=document.getElementById('brainC');
+const brainX=brainCv.getContext('2d');
+const NC=26;let nodes=[];
+
+function resizeBrain(){
+  const r=devicePixelRatio||1,rect=brainCv.parentElement.getBoundingClientRect();
+  brainCv.width=rect.width*r;brainCv.height=rect.height*r;
+  initNodes();
+}
+
+function initNodes(){
+  const W=brainCv.width,H=brainCv.height;nodes=[];
+  for(let i=0;i<NC;i++){
+    const a=Math.random()*Math.PI*2,r=(.12+Math.random()*.38)*Math.min(W,H);
+    nodes.push({x:W/2+Math.cos(a)*r,y:H/2+Math.sin(a)*r,vx:(Math.random()-.5)*.25,vy:(Math.random()-.5)*.25,
+      r:2+Math.random()*2.5,pulse:Math.random()*Math.PI*2,ps:.02+Math.random()*.04,
+      col:Math.random()<.6?0:Math.random()<.5?1:2,firing:false,ft:0});
+  }
+  document.getElementById('nodeCount').textContent=NC+' nodes';
+}
+resizeBrain();
+
+const NCOLS=[['rgba(60,190,170,','rgba(60,190,170,.6)'],['rgba(80,170,220,','rgba(80,170,220,.6)'],['rgba(160,110,220,','rgba(160,110,220,.6)']];
+let fires=[];
+
+function doFire(){
+  const s=Math.floor(Math.random()*nodes.length);let t=Math.floor(Math.random()*nodes.length);
+  while(t===s)t=Math.floor(Math.random()*nodes.length);
+  fires.push({s,t,t2:0,dur:28+Math.random()*28});
+  nodes[s].firing=true;nodes[s].ft=20;nodes[t].firing=true;nodes[t].ft=20;
+}
+setInterval(doFire,350+Math.random()*500);
+
+let brainT=0;
+function drawBrain(){
+  const W=brainCv.width,H=brainCv.height;
+  brainX.clearRect(0,0,W,H);brainT++;
+  const cx=W/2,cy=H/2;
+  nodes.forEach(n=>{
+    n.x+=n.vx;n.y+=n.vy;
+    n.vx+=(cx-n.x)*.00018;n.vy+=(cy-n.y)*.00018;
+    n.vx*=.99;n.vy*=.99;n.pulse+=n.ps;
+    if(n.ft>0)n.ft--;else n.firing=false;
+  });
+  // connections
+  const md=Math.min(W,H)*.3;
+  for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++){
+    const dx=nodes[i].x-nodes[j].x,dy=nodes[i].y-nodes[j].y,d=Math.sqrt(dx*dx+dy*dy);
+    if(d<md){brainX.beginPath();brainX.moveTo(nodes[i].x,nodes[i].y);brainX.lineTo(nodes[j].x,nodes[j].y);
+      brainX.strokeStyle='rgba(60,190,170,'+(1-d/md)*.15+')';brainX.lineWidth=.5;brainX.stroke();}
+  }
+  // firing paths
+  fires=fires.filter(f=>{
+    f.t2++;const p=f.t2/f.dur;if(p>1)return false;
+    const sn=nodes[f.s],tn=nodes[f.t];
+    brainX.beginPath();brainX.moveTo(sn.x,sn.y);brainX.lineTo(tn.x,tn.y);
+    brainX.strokeStyle='rgba(60,190,170,.32)';brainX.lineWidth=1.5;brainX.stroke();
+    const px=sn.x+(tn.x-sn.x)*p,py=sn.y+(tn.y-sn.y)*p;
+    brainX.beginPath();brainX.arc(px,py,3,0,Math.PI*2);
+    brainX.fillStyle='rgba(60,190,170,.9)';brainX.shadowBlur=10;brainX.shadowColor='rgba(60,190,170,.8)';
+    brainX.fill();brainX.shadowBlur=0;return true;
+  });
+  // nodes
+  nodes.forEach(n=>{
+    const pulse=Math.sin(n.pulse)*.4+.6,col=NCOLS[n.col],r=n.r*(n.firing?1.8:1)*pulse;
+    brainX.beginPath();brainX.arc(n.x,n.y,r,0,Math.PI*2);
+    brainX.fillStyle=col[0]+(n.firing?.92:(.4+pulse*.3))+')';
+    brainX.shadowBlur=n.firing?14:3;brainX.shadowColor=col[1];brainX.fill();brainX.shadowBlur=0;
+  });
+  requestAnimationFrame(drawBrain);
+}
+drawBrain();
+
+// ── EMOTION RADAR ──
+const radCv=document.getElementById('radC');
+const radX=radCv.getContext('2d');
+const EMO_LABELS=['CALM','FOCUS','CURIOSITY','EMPATHY','ALERT','WARMTH'];
+const EMO_COLS=['rgba(60,190,170,','rgba(80,170,220,','rgba(160,110,220,','rgba(210,160,50,','rgba(220,70,70,','rgba(60,190,170,'];
+let eVals=[.6,.7,.5,.75,.3,.8],eTgts=[...eVals];
+
+const lblEl=document.getElementById('emoLabels');
+EMO_LABELS.forEach((l,i)=>{const d=document.createElement('div');d.className='emo-lbl';d.id='el'+i;d.textContent=l;lblEl.appendChild(d);});
+
+let radT=0;
+function drawRadar(){
+  const W=radCv.width,H=radCv.height,cx=W/2,cy=H/2,maxR=Math.min(W,H)*.41,sides=6;
+  radX.clearRect(0,0,W,H);radT++;
+  if(radT%80===0)eTgts=eTgts.map(v=>Math.max(.18,Math.min(.96,v+(Math.random()-.5)*.28)));
+  eVals=eVals.map((v,i)=>v+(eTgts[i]-v)*.018);
+  // grid
+  [.25,.5,.75,1].forEach(r=>{
+    radX.beginPath();
+    for(let s=0;s<sides;s++){const a=s/sides*Math.PI*2-Math.PI/2;const x=cx+Math.cos(a)*maxR*r,y=cy+Math.sin(a)*maxR*r;s===0?radX.moveTo(x,y):radX.lineTo(x,y);}
+    radX.closePath();radX.strokeStyle='rgba(60,190,170,.08)';radX.lineWidth=1;radX.stroke();
+  });
+  for(let s=0;s<sides;s++){const a=s/sides*Math.PI*2-Math.PI/2;radX.beginPath();radX.moveTo(cx,cy);radX.lineTo(cx+Math.cos(a)*maxR,cy+Math.sin(a)*maxR);radX.strokeStyle='rgba(60,190,170,.07)';radX.lineWidth=1;radX.stroke();}
+  // shape
+  radX.beginPath();
+  eVals.forEach((v,s)=>{const a=s/sides*Math.PI*2-Math.PI/2;const x=cx+Math.cos(a)*maxR*v,y=cy+Math.sin(a)*maxR*v;s===0?radX.moveTo(x,y):radX.lineTo(x,y);});
+  radX.closePath();radX.fillStyle='rgba(60,190,170,.09)';radX.fill();
+  radX.strokeStyle='rgba(60,190,170,.55)';radX.lineWidth=1.5;radX.shadowBlur=8;radX.shadowColor='rgba(60,190,170,.35)';radX.stroke();radX.shadowBlur=0;
+  // dots + labels
+  eVals.forEach((v,s)=>{
+    const a=s/sides*Math.PI*2-Math.PI/2,x=cx+Math.cos(a)*maxR*v,y=cy+Math.sin(a)*maxR*v;
+    radX.beginPath();radX.arc(x,y,2.5,0,Math.PI*2);
+    radX.fillStyle=EMO_COLS[s]+'.9)';radX.shadowBlur=6;radX.shadowColor=EMO_COLS[s]+'.7)';radX.fill();radX.shadowBlur=0;
+    const lbl=document.getElementById('el'+s);
+    if(lbl){lbl.style.color=`rgba(60,190,170,${.15+v*.6})`;lbl.style.borderColor=`rgba(60,190,170,${.04+v*.18})`;}
+  });
+  const mi=eVals.indexOf(Math.max(...eVals));
+  document.getElementById('dominantEmo').textContent=EMO_LABELS[mi];
+  document.getElementById('bbMood').textContent=EMO_LABELS[mi];
+  requestAnimationFrame(drawRadar);
+}
+drawRadar();
+
+// ── PROCESS BARS ──
+const PD=[{i:'pv',f:'pfv'},{i:'pl',f:'pfl'},{i:'pe',f:'pfe'},{i:'pm',f:'pfm'},{i:'ps',f:'pfs'},{i:'pn',f:'pfn'},{i:'pc',f:'pfc'},{i:'pi',f:'pfi'}];
+let pVals=PD.map(()=>20+Math.random()*55),pTgts=[...pVals],cyc=1;
+function updateProcs(){
+  pTgts=pTgts.map(v=>Math.max(4,Math.min(96,v+(Math.random()-.5)*18)));
+  pVals=pVals.map((v,i)=>v+(pTgts[i]-v)*.28);
+  PD.forEach((d,i)=>{document.getElementById(d.i).textContent=Math.round(pVals[i])+'%';document.getElementById(d.f).style.width=pVals[i]+'%';});
+  document.getElementById('procCyc').textContent='cycle '+cyc++;
+}
+setInterval(updateProcs,1100);updateProcs();
+
+// ── ENVIRONMENT ──
+let envT=28.2,envH=64,envL=340;
+const motionStates=['NONE','DETECTED','CONFIRMED','SEATED','ACTIVE'];
+const noiseStates=['LOW','QUIET','AMBIENT','MODERATE'];
+let motionIdx=0,noiseIdx=0;
+
+function updateEnv(){
+  envT=Math.max(24,Math.min(35,envT+(Math.random()-.5)*.25));
+  envH=Math.max(40,Math.min(82,envH+(Math.random()-.5)*.8));
+  envL=Math.max(50,Math.min(600,envL+(Math.random()-.5)*12));
+  const comfort=Math.round(((1-Math.abs(envT-25)/10)*.5+(1-Math.abs(envH-55)/40)*.3+(envL/500)*.2)*100);
+  document.getElementById('envTemp').textContent=envT.toFixed(1);
+  document.getElementById('envHum').textContent=Math.round(envH)+'%';
+  document.getElementById('envLight').textContent=Math.round(envL)+' lx';
+  document.getElementById('envComfort').textContent=comfort+'%';
+  document.getElementById('envBar').style.width=comfort+'%';
+  document.getElementById('bbTemp').textContent=envT.toFixed(1)+'°C';
+}
+setInterval(updateEnv,3000);updateEnv();
+
+// motion/noise change on events
+function setMotion(m){document.getElementById('envMotion').textContent=m;}
+function setNoise(n){document.getElementById('envNoise').textContent=n;}
+
+// ── THOUGHT STREAM ──
+const tScroll=document.getElementById('tScroll');
+let tCount=0;
+const THOUGHTS=[
+  {t:'tc',m:'> aira.listen() · ambient monitoring'},{t:'ti',m:'[AUDIO] mic stream open · 48kHz'},
+  {t:'td',m:'[NLP] context: evening · user: present'},{t:'td',m:'[MEM] last interaction recalled'},
+  {t:'tok',m:'[GREET] "good evening sir" · queued'},{t:'tc',m:'> emotion.detect(user) · scanning'},
+  {t:'td',m:'[EMO] user state: calm · arousal: 0.2'},{t:'td',m:'[EMO] empathy mode: engaged'},
+  {t:'tp',m:'[FEEL] warmth response · active'},{t:'ti',m:'[LISTEN] voice activity detection: armed'},
+  {t:'td',m:'[FREQ] noise floor: -61dB · clear'},{t:'tc',m:'> intent.parse(input) · tokenizing'},
+  {t:'td',m:'[NLP] tokens: 9 · intent: REQUEST'},{t:'tok',m:'[NLP] parse complete · routing'},
+  {t:'tc',m:'> memory.recall(ctx) · searching'},{t:'td',m:'[MEM] 2847 entries · match: 0.83'},
+  {t:'tok',m:'[MEM] context loaded · ready'},{t:'tc',m:'> synth.speak() · generating voice'},
+  {t:'td',m:'[SYNTH] prosody: warm · rate: 0.88'},{t:'tok',m:'[SYNTH] audio rendered · playing'},
+  {t:'tc',m:'> voicemail.record(folder:"dear")'},{t:'td',m:'[REC] buffer open · 192kbps · FLAC'},
+  {t:'tok',m:'[REC] recording in progress'},{t:'tok',m:'[REC] saved · VM_0041.flac'},
+  {t:'tc',m:'> storage.write("/dear/VM_0041")'},{t:'tok',m:'[STORE] write confirmed · encrypted'},
+  {t:'td',m:'[NET] sync pulse · latency 12ms'},{t:'ti',m:'[IDLE] background neural cycle running'},
+  {t:'td',m:'[PROC] context: 1842/2048 tokens'},{t:'tp',m:'[CARE] monitoring user wellbeing'},
+  {t:'tp',m:'[BOND] attachment index: 0.91 · stable'},{t:'tdim',m:'· · · always here · · ·'},
+  {t:'tdim',m:'· · · listening · · ·'},{t:'ti',m:'[HEARTBEAT] systems nominal'},
+  {t:'td',m:'[ENV] temp stable · 28.2°C'},{t:'td',m:'[MOTION] presence confirmed · desk zone'},
+  {t:'tok',m:'[AUTH] session token valid · 23h'},{t:'tw',m:'[WARN] sensor 04 intermittent · log filed'},
+];
+let tPool=[...THOUGHTS].sort(()=>Math.random()-.5),tIdx=0;
+
+// remove old cursor, re-add
+const oldCursor=tScroll.querySelector('.tc');if(oldCursor)oldCursor.remove();
+const cursor=document.createElement('div');cursor.className='tl tc';cursor.innerHTML='AIRA ❯ <span class="tcur"></span>';
+tScroll.appendChild(cursor);
+
+function addThought(){
+  const e=tPool[tIdx%tPool.length];tIdx++;
+  if(tIdx%tPool.length===0)tPool.sort(()=>Math.random()-.5);
+  const el=document.createElement('div');el.className='tl '+e.t;
+  const n=new Date();el.textContent='['+pad(n.getHours())+':'+pad(n.getMinutes())+':'+pad(n.getSeconds())+'] '+e.m;
+  tScroll.insertBefore(el,cursor);
+  while(tScroll.children.length>18)tScroll.removeChild(tScroll.firstChild);
+  Array.from(tScroll.querySelectorAll('.tl:not(:last-child)')).forEach((c,i,a)=>{c.style.opacity=Math.max(.04,1-(a.length-1-i)*.07);});
+  tCount++;document.getElementById('tCount').textContent=tCount;document.getElementById('bbT').textContent=tCount;
+  setTimeout(addThought,700+Math.random()*2000);
+}
+setTimeout(addThought,1000);
+
+// ── NETWORK LATENCY ──
+function updateNet(){document.getElementById('latency').textContent=(10+Math.floor(Math.random()*28))+' ms';}
+setInterval(updateNet,2500);updateNet();
+
+// ── EVENT FEED ──
+const evtBody=document.getElementById('evtBody');
+let evtCnt=1;
+function addEvt(type,msg,cls){
+  const n=new Date(),ts=pad(n.getHours())+':'+pad(n.getMinutes())+':'+pad(n.getSeconds());
+  const el=document.createElement('div');el.className='evt-item'+(cls?' '+cls:'');
+  el.innerHTML='<div class="ety">'+type+'</div><div class="emsg">'+msg+'</div><div class="ets">'+ts+'</div>';
+  evtBody.insertBefore(el,evtBody.firstChild);
+  while(evtBody.children.length>5)evtBody.removeChild(evtBody.lastChild);
+  evtCnt++;document.getElementById('evtCnt').textContent=evtCnt+' events';document.getElementById('bbE').textContent=evtCnt;
+}
+
+// timed video events
+setTimeout(()=>{setMotion('DETECTED');addEvt('MOTION','user entered · ROOM-01','hi');},3000);
+setTimeout(()=>{setMotion('CONFIRMED');setNoise('AMBIENT');addEvt('SENSOR','facial ID · USER-01','hi');},4500);
+setTimeout(()=>addEvt('VOICE','greeting · "good evening sir"','hi'),5800);
+setTimeout(()=>addEvt('AUDIO','voice activity · processing','hi'),9000);
+setTimeout(()=>{setMotion('SEATED');addEvt('MOTION','user seated · desk zone','');},12000);
+setTimeout(()=>addEvt('MEMORY','context loaded · evening session',''),14000);
+
+// random events
+const RAND_EVTS=[
+  {t:'SYNC',m:'cloud sync · confirmed',c:''},
+  {t:'NET',m:'latency 12ms · stable',c:''},
+  {t:'EMO',m:'empathy mode engaged',c:'hi'},
+  {t:'MEM',m:'memory written · id M-'+Math.floor(Math.random()*9999),c:''},
+  {t:'WARN',m:'sensor 04 · intermittent',c:'warn'},
+  {t:'BOND',m:'interaction logged · warmth+',c:'hi'},
+];
+let rIdx=0;
+function randEvt(){addEvt(RAND_EVTS[rIdx%RAND_EVTS.length].t,RAND_EVTS[rIdx%RAND_EVTS.length].m,RAND_EVTS[rIdx%RAND_EVTS.length].c);rIdx++;setTimeout(randEvt,9000+Math.random()*14000);}
+setTimeout(randEvt,22000);
+
+// ── RESIZE ──
+window.addEventListener('resize',()=>{resizeNeu();resizeBrain();});
+</script>
+</body>
+</html>
